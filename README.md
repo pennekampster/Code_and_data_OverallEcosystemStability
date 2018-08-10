@@ -12,4 +12,4 @@ The `code` folder reports contains three R markdown files to reproduce
 the statistical analyses, the qualitative literature review as well as the calculation of
 overall ecosystem stability. The reports are also available as pdfs in the `reports`folder.
 
-Please also note our shiny app to illustrate the overall ecosystem stability concept: [](https://frankpennekamp.shinyapps.io/Overall_ecosystem_stability_demo/)
+Please also note our [interactive shiny app](https://frankpennekamp.shinyapps.io/Overall_ecosystem_stability_demo/) to illustrate the overall ecosystem stability concept. 
