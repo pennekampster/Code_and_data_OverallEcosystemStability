@@ -1,0 +1,879 @@
+%!PS-Adobe-3.0
+%%DocumentNeededResources: font Helvetica
+%%+ font Helvetica-Bold
+%%+ font Helvetica-Oblique
+%%+ font Helvetica-BoldOblique
+%%+ font Symbol
+%%DocumentMedia: a4 595 841 0 () ()
+%%Title: R Graphics Output
+%%Creator: R Software
+%%Pages: (atend)
+%%Orientation: Portrait
+%%BoundingBox: 18 18 577 824
+%%EndComments
+%%BeginProlog
+/bp  { gs sRGB gs } def
+% begin .ps.prolog
+/gs  { gsave } bind def
+/gr  { grestore } bind def
+/ep  { showpage gr gr } bind def
+/m   { moveto } bind def
+/l  { rlineto } bind def
+/np  { newpath } bind def
+/cp  { closepath } bind def
+/f   { fill } bind def
+/o   { stroke } bind def
+/c   { newpath 0 360 arc } bind def
+/r   { 4 2 roll moveto 1 copy 3 -1 roll exch 0 exch rlineto 0 rlineto -1 mul 0 exch rlineto closepath } bind def
+/p1  { stroke } bind def
+/p2  { gsave bg fill grestore newpath } bind def
+/p3  { gsave bg fill grestore stroke } bind def
+/p6  { gsave bg eofill grestore newpath } bind def
+/p7  { gsave bg eofill grestore stroke } bind def
+/t   { 5 -2 roll moveto gsave rotate
+       1 index stringwidth pop
+       mul neg 0 rmoveto show grestore } bind def
+/ta  { 4 -2 roll moveto gsave rotate show } bind def
+/tb  { 2 -1 roll 0 rmoveto show } bind def
+/cl  { grestore gsave newpath 3 index 3 index moveto 1 index
+       4 -1 roll lineto  exch 1 index lineto lineto
+       closepath clip newpath } bind def
+/rgb { setrgbcolor } bind def
+/s   { scalefont setfont } bind def
+% end   .ps.prolog
+/sRGB { [ /CIEBasedABC
+          << /DecodeLMN
+               [ { dup 0.03928 le
+                        {12.92321 div}
+                        {0.055 add 1.055 div 2.4 exp }
+                     ifelse
+                 } bind dup dup
+               ]
+             /MatrixLMN [0.412457 0.212673 0.019334
+                         0.357576 0.715152 0.119192
+                         0.180437 0.072175 0.950301]
+             /WhitePoint [0.9505 1.0 1.0890]
+           >>
+         ] setcolorspace } bind def
+/srgb { setcolor } bind def
+%%IncludeResource: font Helvetica
+/Helvetica findfont
+dup length dict begin
+  {1 index /FID ne {def} {pop pop} ifelse} forall
+  /Encoding ISOLatin1Encoding def
+  currentdict
+  end
+/Font1 exch definefont pop
+%%IncludeResource: font Helvetica-Bold
+/Helvetica-Bold findfont
+dup length dict begin
+  {1 index /FID ne {def} {pop pop} ifelse} forall
+  /Encoding ISOLatin1Encoding def
+  currentdict
+  end
+/Font2 exch definefont pop
+%%IncludeResource: font Helvetica-Oblique
+/Helvetica-Oblique findfont
+dup length dict begin
+  {1 index /FID ne {def} {pop pop} ifelse} forall
+  /Encoding ISOLatin1Encoding def
+  currentdict
+  end
+/Font3 exch definefont pop
+%%IncludeResource: font Helvetica-BoldOblique
+/Helvetica-BoldOblique findfont
+dup length dict begin
+  {1 index /FID ne {def} {pop pop} ifelse} forall
+  /Encoding ISOLatin1Encoding def
+  currentdict
+  end
+/Font4 exch definefont pop
+%%IncludeResource: font Symbol
+/Symbol findfont
+dup length dict begin
+  {1 index /FID ne {def} {pop pop} ifelse} forall
+  currentdict
+  end
+/Font5 exch definefont pop
+%%EndProlog
+%%Page: 1 1
+bp
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+160.10 750.61 195.12 766.25 cl
+18.00 18.00 577.28 823.89 cl
+195.12 750.61 340.04 766.25 cl
+18.00 18.00 577.28 823.89 cl
+340.04 750.61 435.18 766.25 cl
+18.00 18.00 577.28 823.89 cl
+160.10 700.40 195.12 750.61 cl
+18.00 18.00 577.28 823.89 cl
+160.10 658.83 195.12 700.40 cl
+18.00 18.00 577.28 823.89 cl
+160.10 625.91 195.12 658.83 cl
+18.00 18.00 577.28 823.89 cl
+160.10 584.34 195.12 625.91 cl
+18.00 18.00 577.28 823.89 cl
+160.10 534.13 195.12 584.34 cl
+18.00 18.00 577.28 823.89 cl
+160.10 501.21 195.12 534.13 cl
+18.00 18.00 577.28 823.89 cl
+160.10 459.64 195.12 501.21 cl
+18.00 18.00 577.28 823.89 cl
+160.10 418.07 195.12 459.64 cl
+18.00 18.00 577.28 823.89 cl
+160.10 367.87 195.12 418.07 cl
+18.00 18.00 577.28 823.89 cl
+160.10 326.30 195.12 367.87 cl
+18.00 18.00 577.28 823.89 cl
+160.10 284.74 195.12 326.30 cl
+18.00 18.00 577.28 823.89 cl
+160.10 243.17 195.12 284.74 cl
+18.00 18.00 577.28 823.89 cl
+160.10 210.24 195.12 243.17 cl
+18.00 18.00 577.28 823.89 cl
+160.10 177.32 195.12 210.24 cl
+18.00 18.00 577.28 823.89 cl
+160.10 135.75 195.12 177.32 cl
+18.00 18.00 577.28 823.89 cl
+160.10 102.82 195.12 135.75 cl
+18.00 18.00 577.28 823.89 cl
+160.10 61.26 195.12 102.82 cl
+18.00 18.00 577.28 823.89 cl
+195.12 700.40 340.04 750.61 cl
+18.00 18.00 577.28 823.89 cl
+195.12 658.83 340.04 700.40 cl
+18.00 18.00 577.28 823.89 cl
+195.12 625.91 340.04 658.83 cl
+18.00 18.00 577.28 823.89 cl
+195.12 584.34 340.04 625.91 cl
+18.00 18.00 577.28 823.89 cl
+195.12 534.13 340.04 584.34 cl
+18.00 18.00 577.28 823.89 cl
+195.12 501.21 340.04 534.13 cl
+18.00 18.00 577.28 823.89 cl
+195.12 459.64 340.04 501.21 cl
+18.00 18.00 577.28 823.89 cl
+195.12 418.07 340.04 459.64 cl
+18.00 18.00 577.28 823.89 cl
+195.12 367.87 340.04 418.07 cl
+18.00 18.00 577.28 823.89 cl
+195.12 326.30 340.04 367.87 cl
+18.00 18.00 577.28 823.89 cl
+195.12 284.74 340.04 326.30 cl
+18.00 18.00 577.28 823.89 cl
+195.12 243.17 340.04 284.74 cl
+18.00 18.00 577.28 823.89 cl
+195.12 210.24 340.04 243.17 cl
+18.00 18.00 577.28 823.89 cl
+195.12 177.32 340.04 210.24 cl
+18.00 18.00 577.28 823.89 cl
+195.12 135.75 340.04 177.32 cl
+18.00 18.00 577.28 823.89 cl
+195.12 102.82 340.04 135.75 cl
+18.00 18.00 577.28 823.89 cl
+195.12 61.26 340.04 102.82 cl
+18.00 18.00 577.28 823.89 cl
+340.04 700.40 435.18 750.61 cl
+18.00 18.00 577.28 823.89 cl
+340.04 658.83 435.18 700.40 cl
+18.00 18.00 577.28 823.89 cl
+340.04 625.91 435.18 658.83 cl
+18.00 18.00 577.28 823.89 cl
+340.04 584.34 435.18 625.91 cl
+18.00 18.00 577.28 823.89 cl
+340.04 534.13 435.18 584.34 cl
+18.00 18.00 577.28 823.89 cl
+340.04 501.21 435.18 534.13 cl
+18.00 18.00 577.28 823.89 cl
+340.04 459.64 435.18 501.21 cl
+18.00 18.00 577.28 823.89 cl
+340.04 418.07 435.18 459.64 cl
+18.00 18.00 577.28 823.89 cl
+340.04 367.87 435.18 418.07 cl
+18.00 18.00 577.28 823.89 cl
+340.04 326.30 435.18 367.87 cl
+18.00 18.00 577.28 823.89 cl
+340.04 284.74 435.18 326.30 cl
+18.00 18.00 577.28 823.89 cl
+340.04 243.17 435.18 284.74 cl
+18.00 18.00 577.28 823.89 cl
+340.04 210.24 435.18 243.17 cl
+18.00 18.00 577.28 823.89 cl
+340.04 177.32 435.18 210.24 cl
+18.00 18.00 577.28 823.89 cl
+340.04 135.75 435.18 177.32 cl
+18.00 18.00 577.28 823.89 cl
+340.04 102.82 435.18 135.75 cl
+18.00 18.00 577.28 823.89 cl
+340.04 61.26 435.18 102.82 cl
+18.00 18.00 577.28 823.89 cl
+160.10 750.61 195.12 766.25 cl
+/Font2 findfont 6 s
+0 0 0 srgb
+177.61 756.28 (Code) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 700.40 195.12 750.61 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 723.35 (Ca-05) .5 0 t
+18.00 18.00 577.28 823.89 cl
+195.12 750.61 340.04 766.25 cl
+/Font2 findfont 6 s
+0 0 0 srgb
+267.58 756.28 (Description) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 658.83 195.12 700.40 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 677.46 (PS-02) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 750.61 435.18 766.25 cl
+/Font2 findfont 6 s
+0 0 0 srgb
+355.93 756.28 (Abbre) 0 ta
+-0.090 (viated ref) tb
+-0.060 (erence) tb gr
+18.00 18.00 577.28 823.89 cl
+160.10 625.91 195.12 658.83 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 640.22 (Z2-06) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 584.34 195.12 625.91 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 602.97 (Z1-06 *) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 534.13 195.12 584.34 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 557.08 (Is-15) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 501.21 195.12 534.13 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 515.52 (VR-09) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 459.64 195.12 501.21 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 478.27 (Ba-16) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 418.07 195.12 459.64 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 436.70 (Gr-00-1) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 367.87 195.12 418.07 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 390.82 (Gr-00-2) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 326.30 195.12 367.87 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 344.93 (TD-94) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 284.74 195.12 326.30 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+168.02 303.36 (W) 0 ta
+-0.240 (a-00) tb gr
+18.00 18.00 577.28 823.89 cl
+160.10 243.17 195.12 284.74 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 261.80 (Hu-04) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 210.24 195.12 243.17 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+168.85 224.55 (V) 0 ta
+-0.480 (o-12) tb gr
+18.00 18.00 577.28 823.89 cl
+160.10 177.32 195.12 210.24 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 191.62 (Wr-15) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 135.75 195.12 177.32 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+168.02 154.38 (W) 0 ta
+-0.180 (e-07) tb gr
+18.00 18.00 577.28 823.89 cl
+160.10 102.82 195.12 135.75 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+168.02 117.13 (W) 0 ta
+-0.240 (a-17) tb gr
+18.00 18.00 577.28 823.89 cl
+160.10 61.26 195.12 102.82 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+177.61 79.88 (Ti-96) .5 0 t
+18.00 18.00 577.28 823.89 cl
+195.12 700.40 340.04 750.61 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+212.22 740.63 (Div) 0 ta
+-0.150 (ersity manipulation of gr) tb
+-0.060 (assland plants) tb gr
+202.56 731.99 (\(P) 0 ta
+-0.300 (or) tb
+0.240 (tuguese BIODEPTH site\) analysing tempor) tb
+-0.060 (al) tb gr
+221.39 723.35 (v) 0 ta
+-0.150 (ar) tb
+0.090 (iability and resistance to natur) tb
+-0.060 (al) tb gr
+211.39 714.71 (per) 0 ta
+0.240 (turbation \(frost and lo) tb
+-0.090 (w precipitation\) of) tb gr
+267.58 706.07 (biomass production.) .5 0 t
+18.00 18.00 577.28 823.89 cl
+195.12 658.83 340.04 700.40 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+202.56 690.42 (Div) 0 ta
+-0.150 (ersity manipulation of gr) tb
+-0.060 (assland plants \(Swiss) tb gr
+267.58 681.78 (BIODEPTH site\) analysing resistance and) .5 0 t
+203.39 673.14 (resilience of biomass production to e) 0 ta
+-0.180 (xper) tb
+0.090 (imental) tb gr
+239.73 664.50 (drought per) 0 ta
+0.240 (turbation.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 625.91 340.04 658.83 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+212.39 648.86 (Div) 0 ta
+-0.150 (ersity manipulation of unicellular algae) tb gr
+267.58 640.22 (analysing resistance and resilience of biomass) .5 0 t
+208.22 631.58 (production to e) 0 ta
+-0.180 (xper) tb
+0.090 (imental cold per) tb
+0.240 (turbation.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 584.34 340.04 625.91 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+212.39 615.93 (Div) 0 ta
+-0.150 (ersity manipulation of unicellular algae) tb gr
+205.39 607.29 (analysing tempor) 0 ta
+-0.060 (al v) tb
+-0.150 (ar) tb
+0.090 (iability and resistance to) tb gr
+211.89 598.65 (e) 0 ta
+-0.180 (xper) tb
+0.090 (imental cold per) tb
+0.240 (turbation of biomass) tb gr
+267.58 590.01 (production.) .5 0 t
+18.00 18.00 577.28 823.89 cl
+195.12 534.13 340.04 584.34 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+206.97 574.36 (F) 0 ta
+-0.180 (or) tb
+0.240 (ty-six div) tb
+-0.150 (ersity manipulations of gr) tb
+-0.060 (assland) tb gr
+219.39 565.72 (plants analysing tempor) 0 ta
+-0.060 (al v) tb
+-0.150 (ar) tb
+0.090 (iability) tb
+-0.600 (,) tb gr
+220.39 557.08 (resistance) 0 ta
+-0.090 (, and resilience to natur) tb
+-0.060 (al) tb gr
+200.71 548.44 (per) 0 ta
+0.240 (turbations \(drought and w) tb
+-0.060 (et e) tb
+-0.180 (v) tb
+-0.150 (ents\) of biomass) tb gr
+267.58 539.80 (production.) .5 0 t
+18.00 18.00 577.28 823.89 cl
+195.12 501.21 340.04 534.13 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+211.72 524.16 (Div) 0 ta
+-0.150 (ersity manipulation of plants) tb
+-0.090 (, analysing) tb gr
+204.38 515.52 (resistance and resilience to natur) 0 ta
+-0.060 (al per) tb
+0.240 (turbation) tb gr
+267.58 506.88 (\(drought\) of biomass production.) .5 0 t
+18.00 18.00 577.28 823.89 cl
+195.12 459.64 340.04 501.21 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+209.22 491.23 (Div) 0 ta
+-0.150 (ersity manipulation of diatoms) tb
+-0.090 (, analysing) tb gr
+214.39 482.59 (resistance and resilience to per) 0 ta
+0.240 (turbation) tb gr
+214.56 473.95 (\(chemical stressor) 0 ta
+-0.300 (, atr) tb
+-0.060 (azine\) of biomass) tb gr
+267.58 465.31 (production.) .5 0 t
+18.00 18.00 577.28 823.89 cl
+195.12 418.07 340.04 459.64 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+210.89 449.66 (Div) 0 ta
+-0.150 (ersity manipulation b) tb
+-0.120 (y fumigation of soil) tb gr
+215.23 441.02 (microorganisms) 0 ta
+-0.090 (, analysing resilience to) tb gr
+215.22 432.38 (per) 0 ta
+0.240 (turbation \(heating\) and resistance to) tb gr
+219.06 423.74 (per) 0 ta
+0.240 (turbation \(heating \) of respir) tb
+-0.060 (ation.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 367.87 340.04 418.07 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+210.89 408.10 (Div) 0 ta
+-0.150 (ersity manipulation b) tb
+-0.120 (y fumigation of soil) tb gr
+215.23 399.46 (microorganisms) 0 ta
+-0.090 (, analysing resilience to) tb gr
+204.39 390.82 (per) 0 ta
+0.240 (turbation \(chemical stress\) and resistance to) tb gr
+213.23 382.18 (per) 0 ta
+0.240 (turbation \(chemical stress) tb
+-0.090 (, CuSO4\) of) tb gr
+252.74 373.54 (respir) 0 ta
+-0.060 (ation.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 326.30 340.04 367.87 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+215.73 357.89 (Div) 0 ta
+-0.150 (ersity manipulation b) tb
+-0.120 (y f) tb
+-0.180 (er) tb
+0.240 (tilisation of) tb gr
+208.05 349.25 (plants) 0 ta
+-0.090 (, analysing resistance and resilience of) tb gr
+211.38 340.61 (biomass production to natur) 0 ta
+-0.060 (al per) tb
+0.240 (turbation) tb gr
+267.58 331.97 (\(drought\).) .5 0 t
+18.00 18.00 577.28 823.89 cl
+195.12 284.74 340.04 326.30 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+211.72 316.32 (Div) 0 ta
+-0.150 (ersity manipulation of plants) tb
+-0.090 (, analysing) tb gr
+213.22 307.68 (resistance and resilience to e) 0 ta
+-0.180 (xper) tb
+0.090 (imental) tb gr
+209.55 299.04 (per) 0 ta
+0.240 (turbation \(drought\) of v) tb
+-0.150 (ar) tb
+0.090 (ious ecosystem) tb gr
+254.74 290.40 (functions) 0 ta
+-0.090 (.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 243.17 340.04 284.74 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+201.39 274.76 (Analysis of div) 0 ta
+-0.150 (erse studies of mar) tb
+0.090 (ine ecosystems) tb
+-0.090 (,) tb gr
+201.47 266.12 (some of which e) 0 ta
+-0.180 (xamined div) tb
+-0.150 (ersity-resistance and) tb gr
+211.98 257.48 (some div) 0 ta
+-0.150 (ersity-resilience relationships f) tb
+-0.180 (or) tb gr
+229.06 248.84 (v) 0 ta
+-0.150 (ar) tb
+0.090 (ious ecosystem functions) tb
+-0.090 (.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 210.24 340.04 243.17 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+211.39 233.19 (Div) 0 ta
+-0.150 (ersity manipulation of gr) tb
+-0.060 (assland plants) tb
+-0.090 (.) tb gr
+267.58 224.55 (Analysis of resistance and resilience of biomass) .5 0 t
+221.55 215.91 (production to drought per) 0 ta
+0.240 (turbation.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 177.32 340.04 210.24 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+211.39 200.26 (Div) 0 ta
+-0.150 (ersity manipulation of gr) tb
+-0.060 (assland plants) tb
+-0.090 (.) tb gr
+207.89 191.62 (Analysis of tempor) 0 ta
+-0.060 (al v) tb
+-0.150 (ar) tb
+0.090 (iability and resilience) tb gr
+206.21 182.98 (of biomass production to drought per) 0 ta
+0.240 (turbation.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 135.75 340.04 177.32 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+213.23 167.34 (Manipulation of soil microbial div) 0 ta
+-0.150 (ersity b) tb
+-0.120 (y) tb gr
+213.56 158.70 (ser) 0 ta
+0.090 (ial dilution. Analysis of resistance and) tb gr
+219.06 150.06 (resilience of denitr) 0 ta
+0.090 (ification and nitr) tb
+0.090 (ite) tb gr
+212.88 141.42 (o) 0 ta
+-0.180 (xidisation to a temper) tb
+-0.060 (ature per) tb
+0.240 (turbation.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 102.82 340.04 135.75 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+211.39 125.77 (Div) 0 ta
+-0.150 (ersity manipulation of gr) tb
+-0.060 (assland plants) tb
+-0.090 (.) tb gr
+207.89 117.13 (Analysis of tempor) 0 ta
+-0.060 (al v) tb
+-0.150 (ar) tb
+0.090 (iability and resilience) tb gr
+206.21 108.49 (of biomass production to drought per) 0 ta
+0.240 (turbation.) tb gr
+18.00 18.00 577.28 823.89 cl
+195.12 61.26 340.04 102.82 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+207.56 92.84 (Div) 0 ta
+-0.150 (ersity manipulation of gr) tb
+-0.060 (assland plants via) tb gr
+210.39 84.20 (f) 0 ta
+-0.180 (er) tb
+0.240 (tilisation. Analysis of tempor) tb
+-0.060 (al v) tb
+-0.150 (ar) tb
+0.090 (iability) tb
+-0.600 (,) tb gr
+267.58 75.56 (resilience and resistance of biomass production) .5 0 t
+226.39 66.92 (to natur) 0 ta
+-0.060 (al drought per) tb
+0.240 (turbation.) tb gr
+18.00 18.00 577.28 823.89 cl
+340.04 700.40 435.18 750.61 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+351.09 727.67 (Caldeir) 0 ta
+-0.060 (a et al \(2005\) Oik) tb
+-0.120 (os) tb
+-0.090 (,) tb gr
+387.61 719.03 (110, 115) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 658.83 435.18 700.40 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+387.61 681.78 (Pfister & Schmid \(2002\)) .5 0 t
+366.93 673.14 (Nature) 0 ta
+-0.090 (, 416, 84) tb gr
+18.00 18.00 577.28 823.89 cl
+340.04 625.91 435.18 658.83 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+348.09 644.54 (Zhang & Zhang \(2006\) Oik) 0 ta
+-0.120 (os) tb
+-0.090 (,) tb gr
+387.61 635.90 (112, 218) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 584.34 435.18 625.91 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+348.09 607.29 (Zhang & Zhang \(2006\) Oik) 0 ta
+-0.120 (os) tb
+-0.090 (,) tb gr
+387.61 598.65 (114, 385) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 534.13 435.18 584.34 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+353.93 561.40 (Isbell et al \(2015\) Nature) 0 ta
+-0.090 (,) tb gr
+387.61 552.76 (526, 574) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 501.21 435.18 534.13 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+345.42 519.84 (V) 0 ta
+-0.420 (an Ruijv) tb
+-0.150 (en & Berendse \(2009\)) tb gr
+352.92 511.20 (Jour) 0 ta
+0.150 (nal of Ecology) tb
+-0.600 (, 98, 81) tb gr
+18.00 18.00 577.28 823.89 cl
+340.04 459.64 435.18 501.21 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+352.09 482.59 (Baer) 0 ta
+0.240 (t et al \(2016\) Ecology) tb
+-0.600 (,) tb gr
+387.61 473.95 (97, 3433) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 418.07 435.18 459.64 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+351.93 441.02 (Gr) 0 ta
+0.090 (iffiths et al \(2000\) Oik) tb
+-0.120 (os) tb
+-0.090 (,) tb gr
+387.61 432.38 (2, 279) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 367.87 435.18 418.07 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+351.93 395.14 (Gr) 0 ta
+0.090 (iffiths et al \(2000\) Oik) tb
+-0.120 (os) tb
+-0.090 (,) tb gr
+387.61 386.50 (2, 279) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 326.30 435.18 367.87 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+354.43 349.25 (Timan & Do) 0 ta
+-0.090 (wning \(1994\)) tb gr
+365.26 340.61 (Nature) 0 ta
+-0.090 (, 367, 363) tb gr
+18.00 18.00 577.28 823.89 cl
+340.04 284.74 435.18 326.30 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+352.76 307.68 (W) 0 ta
+-0.240 (ardle et al \(2000\) Oik) tb
+-0.120 (os) tb
+-0.090 (,) tb gr
+387.61 299.04 (98, 11) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 243.17 435.18 284.74 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+387.61 266.12 (Hughes & Stachwicz \(2004\),) .5 0 t
+367.76 257.48 (PNAS) 0 ta
+-0.120 (, 101, 24) tb gr
+18.00 18.00 577.28 823.89 cl
+340.04 210.24 435.18 243.17 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+348.42 228.87 (V) 0 ta
+-0.480 (ogel et al \(2012\) PLoS One) tb
+-0.090 (,) tb gr
+387.61 220.23 (7, e36992) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 177.32 435.18 210.24 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+353.09 195.94 (Wr) 0 ta
+0.090 (ight et al \(2015\) Nature) tb gr
+353.59 187.30 (Comm) 0 ta
+-0.060 (unications) tb
+-0.090 (, 6, 6092) tb gr
+18.00 18.00 577.28 823.89 cl
+340.04 135.75 435.18 177.32 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+363.77 163.02 (W) 0 ta
+-0.180 (er) tb
+0.240 (tz et al \(2007\)) tb gr
+349.93 154.38 (En) 0 ta
+-0.120 (vironmental Microbiology) tb
+-0.600 (,) tb gr
+387.61 145.74 (9, 2211) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 102.82 435.18 135.75 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+351.42 121.45 (W) 0 ta
+-0.240 (aag et al \(2017\) Ecology) tb
+-0.600 (,) tb gr
+387.61 112.81 (DOI: 10.1002/ecy.2003) .5 0 t
+18.00 18.00 577.28 823.89 cl
+340.04 61.26 435.18 102.82 cl
+/Font1 findfont 6 s
+0 0 0 srgb
+351.76 84.20 (Tilman \(1996\) Ecology) 0 ta
+-0.600 (, 77,) tb gr
+387.61 75.56 (350) .5 0 t
+18.00 18.00 577.28 823.89 cl
+160.10 766.25 435.18 780.63 cl
+18.00 18.00 577.28 823.89 cl
+160.10 766.25 195.12 780.63 cl
+0 0 0 srgb
+3.00 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+195.12 766.25 m
+-35.02 0 l
+o
+18.00 18.00 577.28 823.89 cl
+195.12 766.25 340.04 780.63 cl
+0 0 0 srgb
+3.00 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+340.04 766.25 m
+-144.92 0 l
+o
+18.00 18.00 577.28 823.89 cl
+340.04 766.25 435.18 780.63 cl
+0 0 0 srgb
+3.00 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+435.18 766.25 m
+-95.14 0 l
+o
+18.00 18.00 577.28 823.89 cl
+160.10 750.61 195.12 766.25 cl
+0 0 0 srgb
+1.50 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+195.12 750.61 m
+-35.02 0 l
+o
+18.00 18.00 577.28 823.89 cl
+195.12 750.61 340.04 766.25 cl
+0 0 0 srgb
+1.50 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+340.04 750.61 m
+-144.92 0 l
+o
+18.00 18.00 577.28 823.89 cl
+340.04 750.61 435.18 766.25 cl
+0 0 0 srgb
+1.50 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+435.18 750.61 m
+-95.14 0 l
+o
+18.00 18.00 577.28 823.89 cl
+160.10 61.26 195.12 102.82 cl
+0 0 0 srgb
+3.00 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+195.12 61.26 m
+-35.02 0 l
+o
+18.00 18.00 577.28 823.89 cl
+195.12 61.26 340.04 102.82 cl
+0 0 0 srgb
+3.00 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+340.04 61.26 m
+-144.92 0 l
+o
+18.00 18.00 577.28 823.89 cl
+340.04 61.26 435.18 102.82 cl
+0 0 0 srgb
+3.00 setlinewidth
+[] 0 setdash
+1 setlinecap
+1 setlinejoin
+10.00 setmiterlimit
+np
+435.18 61.26 m
+-95.14 0 l
+o
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+18.00 18.00 577.28 823.89 cl
+ep
+%%Trailer
+%%Pages: 1
+%%EOF

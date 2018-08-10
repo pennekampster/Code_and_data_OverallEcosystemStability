@@ -1,0 +1,829 @@
+---
+title: "Reproducible report I for 'Biodiversity increases and decreases ecosystem stability'"
+subtitle: 'Reproducible report of statistical analysis'
+author: "Frank Pennekamp"
+date: "August 7, 2018"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+    df_print: kable
+---
+
+```{r, echo=F, include=F}
+knitr::opts_chunk$set(echo = F,
+                      warning = F,
+                      message = F,
+                      tidy = T,
+                      tidy.opts=list(width.cutoff=60))
+```
+
+```{r setup, include=FALSE}
+rm(list=ls())
+library(knitr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+library(nlme)
+library(tidyr)
+library(cowplot)
+library(lmerTest)
+library(codyn)
+library(ggbeeswarm)
+library(lmodel2)
+library(viridis)
+library(broom)
+library(purrr)
+
+library(papeR)
+library(here)
+library(gtable)
+library(gridExtra)
+library(grid)
+library(writexl)
+
+options(scipen = 3)
+
+```
+
+
+```{r}
+## Source some helper functions for plotting and exporting results as extended data figures:
+source("helper_functions.R")
+```
+
+# Introduction
+
+The purpose of this document is to provide a reproducible record of all analyses and figures in the main article and extended data. Please note, however, that the main article and extended data contain full and detailed information about the analyses therein.
+
+This document is produced by an Rmarkdown file that includes code to reproduce from data all results presented in the main article and extended data. R code is intentionally not present in the compiled report (e.g. the pdf), so please refer to the Rmarkdown file if you wish to view it.
+
+# Prepare datasets
+
+We load the dataset and exclude a small number of microcosms where we detected contamination during the experiment.
+
+1. Load the dataset that contains the total biomass of each replicate community at each sampling date.
+2. Exclude a small number of microcosms where we detected contamination during the experiment.
+3. Some data wrangling (e.g. changing variable types).
+4. Calculate resistance (both on the absolute and relative scale).
+5. Calculate temporal stability.
+
+```{r}
+# 1
+dd <- read.csv(here("data", "total_biomass_BEEP_OES.csv"),  header=T)
+
+# 2
+dd2 <- dd %>% filter(!(microcosmID %in% c(49,229,275,327,353,359,696,261,312,406)))
+
+# 3
+dd2$log_rich <- log(dd2$richness)
+dd2$ID <- paste0(dd2$combination,"_", dd2$temperature, "_", dd2$replicate)
+dd2$frep <- as.factor(dd2$replicate)
+dd2$fday <- as.factor(dd2$day)
+dd2$fmicrocosmID <- as.factor(dd2$microcosmID)
+dd2$temp_center <- as.numeric(scale(dd2$temperature, center=T, scale=F))
+dd2$ftemp <- as.factor(dd2$temperature)
+
+# 4
+# select 15 degrees as reference temperature
+ref_bm_15 <- dd2 %>% 
+  filter(temperature == 15) %>%
+  group_by(combination) %>% 
+  dplyr::summarize(mean_bm_15 = mean(total_biomass, na.rm = T))
+# select all temperature except 15 degrees
+bm_all_temps <- dd2 %>% 
+  filter(temperature != 15) %>%
+  group_by(combination, temperature, richness, replicate) %>% 
+  dplyr::summarize(mean_bm = mean(total_biomass, na.rm = T))
+bm_resist <- merge(bm_all_temps, ref_bm_15)
+bm_resist$frep <- as.factor(bm_resist$replicate)
+bm_resist$log_rich <- log(bm_resist$richness)
+bm_resist$temp_center <- as.numeric(scale(bm_resist$temperature, center=T, scale=F))
+# resistance defined as the difference between stressed and control (i.e. Pfisterer & Schmid 2004)
+bm_resist$abs_resist <- bm_resist$mean_bm-bm_resist$mean_bm_15
+# adjust the community resistance metric to reflect per degree Celsius change in total biovolume
+bm_resist$abs_resist <- bm_resist$abs_resist / (bm_resist$temperature-15)
+# same for relative resistance
+bm_resist$rel_resist <- (bm_resist$mean_bm-bm_resist$mean_bm_15)/bm_resist$mean_bm_15
+# adjust the community resistance metric to reflect per degree Celsius change in total biovolume
+bm_resist$rel_resist <- bm_resist$rel_resist / (bm_resist$temperature-15)
+
+# 5
+# analysis of temporal stability
+temp_stab <- dd2 %>% 
+group_by(combination, temperature, replicate, richness) %>% 
+dplyr::summarize(inv_community_CV = mean(total_biomass, na.rm=T)/sd(total_biomass, na.rm = T))
+temp_stab$frep <- as.factor(temp_stab$replicate)
+temp_stab$log_rich <- log(temp_stab$richness)
+temp_stab$temp_center <- as.numeric(scale(temp_stab$temperature, center=T, scale=F))
+
+## join resistance and temporal stability data
+stab_df <- inner_join(temp_stab, bm_resist, by=c("combination", "richness", "temperature", "replicate"))
+```
+
+# Plot temporal stability and resistance (figure 1a of main article)
+
+```{r, out.width = "70%", fig.width= 7, fig.height=7, fig.align="center"}
+p1 <- ggplot() + geom_quasirandom(data= temp_stab,
+                                  aes(y=inv_community_CV, x=richness, group=richness, colour=as.factor(richness)),
+                                  dodge.width=2, size=1) + ylab("Temporal\nstability\n(mean/STD)") +
+  theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 30, unit = "pt")) +
+  guides(colour=F) + scale_colour_viridis(discrete=T, option= "D") +
+  scale_x_continuous(limits=c(.6,6), breaks=1:6) + xlab("Richness") # + theme(axis.title.y = element_text(angle=0)) 
+
+p2 <- ggplot() + geom_quasirandom(data= bm_resist,
+                                  aes(y=abs_resist, x=richness, group=richness, colour=as.factor(richness)),
+                                  dodge.width=2, size=1) + scale_colour_viridis(discrete=T) + ylab(expression(atop("Resistance", "("*Delta*"microgram/mL)"))) +
+  theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 30, unit = "pt")) +
+  guides(colour=F) + scale_x_continuous(limits=c(.6,6), breaks=1:6) +
+  geom_hline(yintercept=0, colour="grey", linetype="dashed") + xlab("Richness")
+cowplot::plot_grid(p1, p2, align = "hv", ncol=1, labels=c("a1", "a2"))
+```
+
+# Plot summary total biomass dynamics (figure 1b of main article)
+
+```{r, out.width = "70%", fig.width= 7, fig.height=7, fig.align="center"}
+se <- function(x) sqrt(var(x,na.rm=TRUE)/length(na.omit(x)))
+
+dd2 %>% group_by(richness, day, group=as.factor(richness), fill=as.factor(richness)) %>%
+  dplyr::summarize(mean_biomass = mean(total_biomass, na.rm=T), se= se(total_biomass)) %>%
+  mutate(lower_y = mean_biomass-se, upper_y = mean_biomass+se) %>% 
+  ggplot(aes(y=mean_biomass, x=day)) + geom_line(aes(colour=as.factor(richness), group=as.factor(richness))) +
+  geom_ribbon(alpha=.7, aes(ymin=lower_y, ymax=upper_y, group=as.factor(richness), fill=as.factor(richness))) +
+  theme(legend.position="bottom") + ylab("Biomass (microgram/mL)") + xlab("Day") +
+  viridis::scale_colour_viridis(name ="richness", discrete=T) +
+  viridis::scale_fill_viridis(name ="richness", discrete=T) +
+  theme(legend.position="top") + 
+  guides(colour=F, fill = guide_legend(override.aes = list(size = 8), ncol = 6))
+```
+
+\pagebreak
+
+# Analyses of total biomass production
+
+## Model 0: total biomass production across days
+
+First we analyze the effect of temperature and diversity on biomass using a mixed model with combination and microcosm ID as random effects. We use the nlme library and the function lme() as this allows us to model a combination specific variance. Temperature was centered on the mean to test for differences in the middle of the temperature range, rather than at zero degrees Celsius. Richness was log transformed. Combination and microcosm ID were added as random effects to account for differential biomass production across communities and to account for the repeated nature of the measurements.
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lme(total_biomass_per_day ~ log(richness) + temperature.centered,  
+            random = list(combination = ~ 1, fmicrocosmID = ~ 1),
+            weights = varIdent(form = ~ 1 | combination), ...)
+```
+
+```{r}
+ctrl <- lmeControl(opt='optim', msMaxIter=1000, msVerbose = F, optimMethod = "L-BFGS-B");
+
+mod1a <- lme(total_biomass ~ log_rich * temp_center,  
+            random = list(combination = ~ 1, fmicrocosmID = ~ 1),
+            weights = varIdent(form = ~ 1 | combination),
+            control = ctrl, 
+            data=dd2, 
+            na.action=na.omit)
+
+summary1 <- papeR::prettify(summary(mod1a), signif.stars=F, digits=3, smallest.pval = 0.000001)
+summary1$` ` <- c("Intercept", "Richness", "Temperature", "Rich. x temp.")
+colnames(summary1)[2] <- c("Estimate")
+summary1
+```
+
+#### AIC comparison of linear vs. nonlinear temperature effect:
+
+```{r}
+# model with temperature as factor
+mod1b <- lme(total_biomass ~ log_rich * as.factor(temp_center),  
+            random = list(combination = ~ 1, fmicrocosmID = ~ 1),
+            weights = varIdent(form = ~ 1 | combination),
+            control = ctrl, 
+            data=dd2, 
+            na.action=na.omit)
+
+AICtab(mod1a, mod1b)
+```
+
+A model where temperature is coded as a factor (and hence allowing for a nonlinear relationship with temperature) does not represent the data  better than modeling the temperature effect as linear.
+
+#### Visualise model predictions (one panel for each temperature)
+
+```{r, out.width = "90%", fig.width= 9, fig.height=3, fig.align="center"}
+df_new <- expand.grid(temp_center=unique(temp_stab$temp_center), richness = 1:6)
+df_new$log_rich <- log(df_new$richness)
+df_new$total_biomass <- as.numeric(predict(mod1a, df_new, level=0))
+df_new$temperature <- rep(seq(15,25,by=2), 6)
+
+ggplot() + geom_point(data=dd2,  aes(y=total_biomass, x = log_rich, colour=temperature)) + 
+  geom_line(data=df_new, aes(y=total_biomass, x = log_rich, colour=temperature)) + 
+  facet_grid(~temperature) +
+  xlab("Log richness") + 
+  ylab("Total biomass\n(microgram/mL)") +
+  scale_colour_gradient(limits=c(15, 25), low="blue", high="red") + guides(colour=F) 
+```
+
+\pagebreak
+
+## Model 1: average total biomass
+
+To study the robustness of the previous result, we averaged biomass per microcosm and repeated the mixed model analysis with combination as random effect and centered temperature and log richness as fixed effects. 
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lme(average_total_biomass ~ log(richness) + temperature.centered,  
+            random =  list(combination =  ~ 1), ...)
+```
+
+
+```{r, results="asis"}
+dd_mean <- dd2 %>% 
+  group_by(temperature, temp_center, ftemp, richness, log_rich, combination, frep, fmicrocosmID) %>%
+  dplyr::summarize(mean_total_biomass = mean(total_biomass, na.rm =T))
+
+mod1c <- lme(mean_total_biomass ~  log_rich * temp_center, 
+           random =  list(combination =  ~ 1), 
+           data = dd_mean, 
+           na.action=na.omit)
+
+summary_linear <- papeR::prettify(summary(mod1c), signif.stars=F, digits=3, smallest.pval = 0.000001)
+summary_linear$` ` <- c("Intercept", "Richness", "Temperature", "Rich. x temp.")
+colnames(summary_linear)[2] <- c("Estimate")
+summary_linear
+```
+
+The results were qualitatively and quantitatively very similar compared to the previous model considering the temporal dynamics (model 0).
+
+```{r, eval = T, echo = F}
+postscript(file=here("extended_data", "Extended_data_table_1.eps"), pagecentre = T, width=18.3, height=4, pointsize=8, horizontal=F)
+cowplot::plot_grid(minimal_gtable(summary1), minimal_gtable(summary_linear), ncol=1, nrow=2, labels = "auto", rel_heights=c(.2,.2))
+whatever <- dev.off()
+```
+
+#### AIC comparison of linear vs. nonlinear temperature effect:
+
+```{r, eval=T}
+mod1c_nonlinear <- lme(mean_total_biomass ~  log_rich * ftemp, 
+           random =  list(combination =  ~ 1), 
+           data = dd_mean, 
+           na.action=na.omit)
+AICtab(mod1c, mod1c_nonlinear)
+```
+
+In line with the other results, a linear temperature effect is better supported by the data (deltaAIC > 9).
+
+#### Visualise model predictions (one panel for each temperature)
+
+```{r, out.width = "90%", fig.width= 9, fig.height=3, fig.align="center"}
+df_new <- expand.grid(temp_center=unique(temp_stab$temp_center), richness = 1:6)
+df_new$log_rich <- log(df_new$richness)
+df_new$mean_total_biomass <- as.numeric(predict(mod1c, df_new, level=0))
+df_new$temperature <- rep(seq(15,25,by=2), 6)
+
+ggplot() + geom_point(data=dd_mean,  aes(y=mean_total_biomass, x = log_rich, colour=temperature)) + 
+  geom_line(data=df_new, aes(y=mean_total_biomass, x = log_rich, colour=temperature)) + 
+  facet_grid(~temperature) +
+  xlab("Log richness") + 
+  ylab("Total biomass\n(microgram/mL)") +
+  scale_colour_gradient(limits=c(15, 25), low="blue", high="red") + guides(colour=F) 
+```
+
+\pagebreak
+
+## Model 2: total biomass, split by day
+
+We also examined variation in the estimated effects of temperature and richness differed over the course of the experiment. To do so, we fitted mixed models for each day. The resulting graph shown below is figure 1C of the main article.
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lme(total_biomass ~ log(richness) + temperature.centered, 
+                    random = list(combination = ~ 1), ...)
+```
+
+```{r}
+## split the data by day
+dd3 <- dd2 %>% 
+  select(day, total_biomass, frep, temperature, 
+         temp_center, richness, log_rich, combination, fmicrocosmID, ftemp) %>%  
+  group_by(day) %>% 
+  nest()
+```
+
+```{r}
+## run mixed model for each day, plus some wrangling
+ctrl <- lmeControl(opt='optim');
+
+dd3 <- dd3 %>% filter(day  > 0) %>%
+  mutate(mod_per_day_bm_trend = map(data, ~ lme(total_biomass ~ log_rich * temp_center, 
+                                                list(combination = ~ 1), 
+                                                control = ctrl, 
+                                                data=., 
+                                                na.action=na.omit)))
+
+dd3 <- dd3[,1:3]
+
+# extract model coefficients
+fixed_per_day <-  plyr::ldply(map(dd3$mod_per_day_bm_trend, ~ fixed.effects(.)))
+confid_per_day <-  bind_rows(lapply(1:nrow(dd3),
+function(x) tibble::rownames_to_column(
+  as.data.frame(intervals(dd3$mod_per_day_bm_trend[[x]], which="fixed")$fixed)))
+)
+
+confid_per_day_t <- confid_per_day %>% 
+  mutate(day = rep(1:19, each=4)) %>%
+  select(rowname, lower, upper, day) %>%
+  gather(var, value, -rowname, -day) %>% 
+  mutate(rowname2 = paste0(rowname, "_", var),
+         rowname3 = paste0(rowname, "_", var, "_", day)) %>%
+  select(day, rowname2, value) %>%
+  spread(rowname2, value) 
+
+dd3 <- cbind(dd3, fixed_per_day, confid_per_day_t)
+```
+
+```{r, out.width = "70%", fig.width= 7, fig.height=7, fig.align="center"}
+plot_dd3 <- dd3[, c(-2,-3)]
+gg_temp <- ggplot(data=plot_dd3, aes(y=temp_center, x=day))  +
+  geom_ribbon(aes(ymin = temp_center_lower, ymax = temp_center_upper), fill="lightgrey") +
+  geom_line() + xlab("")+ geom_abline(intercept=0, slope=0, linetype="dashed") +
+  theme(plot.margin = margin(t = 0, r = 0, b = 0, l = 30, unit = "pt")) +
+  ylab("Temperature\nmain effect")
+gg_rich <- ggplot(data=plot_dd3, aes(y=`log_rich`, x=day)) +
+  geom_ribbon(aes(ymin = `log_rich_lower`, ymax = `log_rich_upper`), fill="lightgrey") +
+  geom_line()  + xlab("") + geom_abline(intercept=0, slope=0, linetype="dashed") +
+  ylab("Log(richness)\nmain effect")
+gg_IA <- ggplot(data=plot_dd3, aes(y=`log_rich:temp_center`, x=day)) +
+  geom_ribbon(aes(ymin = `log_rich:temp_center_lower`, ymax = `log_rich:temp_center_upper`), fill="lightgrey") +
+  geom_line() + geom_abline(intercept=0, slope=0, linetype="dashed") +
+  ylab("Interaction") + xlab("Day") 
+
+cowplot::plot_grid(gg_temp, gg_rich, gg_IA, align = "hv",  ncol=1)
+```
+
+There is a clear positive effect of log richness, a negative effect of temperature and an increasingly negative interaction between temperature and richness.
+
+\pagebreak
+
+## Model 3: resistance in biomass production to warming
+
+### Absolute resistance
+
+First we model absolute resistance as a function of centered temperature and log richness:
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lme(absolute_resistance ~ log(richness) + temperature.centered, 
+                          random = ~ 1 | combination, ...) 
+```
+
+```{r}
+mod3a <- lme(abs_resist ~   log_rich * temp_center,
+            random = ~ 1 | combination,
+            data = bm_resist, 
+            na.action = na.omit)
+summary3a <- papeR::prettify(summary(mod3a), signif.stars=F, digits=3, smallest.pval = 0.000001)
+summary3a$` ` <- c("Intercept", "Richness", "Temperature", "Rich. x temp.")
+colnames(summary3a)[2] <- c("Estimate")
+summary3a
+```
+
+Richness and temperature decrease the absolute resistance, whereas the interaction is not significant (same slopes).
+
+#### AIC comparison of linear vs. nonlinear temperature effect:
+
+```{r}
+mod3_nonlinear <- lme(abs_resist ~   log_rich * as.factor(temp_center),
+            random = ~ 1 | combination, 
+            data = bm_resist, 
+            na.action = na.omit)
+
+AICtab(mod3a, mod3_nonlinear)
+```
+
+Again, there is no support for a nonlinear temperature effect.
+
+#### Visualise model predictions (one panel for each temperature)
+
+```{r, out.width = "90%", fig.width= 9, fig.height=3, fig.align="center"}
+df_new <- expand.grid(temp_center=unique(temp_stab$temp_center), richness = 1:6)
+df_new$log_rich <- log(df_new$richness)
+df_new$abs_resist <- as.numeric(predict(mod3a, df_new, level=0))
+df_new$temperature <- rep(seq(15,25,by=2), 6)
+
+abs_resist <- ggplot() + geom_point(data=subset(bm_resist, temperature > 15),  aes(y=abs_resist, x = log_rich, colour=temperature)) + 
+  geom_line(data=subset(df_new, temperature > 15), aes(y=abs_resist, x = log_rich, colour=temperature)) + 
+  facet_grid(~temperature) +
+  xlab("Log richness") + 
+  ylab("Absolute resistance\n(microgram/mL)") +
+  scale_colour_gradient(limits=c(15, 25), low="blue", high="red") + guides(colour=F) 
+abs_resist
+```
+
+\pagebreak
+
+### Relative resistance
+
+As richness levels differ in the ability to produce biomass (see biomass production analysis) absolute resistance may be driven by richness-dependent biomass production. Therefore, we checked whether the relative resistance (proportional loss in biomass when communities were warmed). 
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lme(relative_resistance ~ log(richness) + temperature.centered, 
+                          random = ~ 1 | combination, ...) 
+```
+
+
+```{r, results = "asis"}
+mod3b <- lme(rel_resist ~   log_rich * temp_center,
+            random = ~ 1 | combination, 
+            data = bm_resist, 
+            na.action = na.omit)
+summary3b <- papeR::prettify(summary(mod3b), signif.stars=F, digits=3, smallest.pval = 0.000001)
+
+summary3b$` ` <- c("Intercept", "Richness", "Temperature", "Rich. x temp.")
+colnames(summary3b)[2] <- c("Estimate")
+summary3b 
+```
+
+Results clearly show that relative resistance does differ across richness and temperature and hence that resistance is not only a function of the ability of different communities to produce biomass.
+
+#### Visualise model predictions (one panel for each temperature)
+
+```{r, out.width = "90%", fig.width= 9, fig.height=3,  fig.align="center"}
+df_new <- expand.grid(temp_center=unique(temp_stab$temp_center), richness = 1:6)
+df_new$log_rich <- log(df_new$richness)
+df_new$rel_resist <- as.numeric(predict(mod3b, df_new, level=0))
+df_new$temperature <- rep(seq(15,25,by=2), 6)
+
+rel_resist <- ggplot() + geom_point(data=subset(bm_resist, temperature > 15),  aes(y=rel_resist, x = log_rich, colour=temperature)) + 
+  geom_line(data=subset(df_new, temperature > 15), aes(y=rel_resist, x = log_rich, colour=temperature)) + 
+  facet_grid(~temperature) +
+   xlab("Log richness") + 
+  ylab("Relative resistance\n(proportinal decrease\ncompared to 15°C per degree C)") +
+  scale_colour_gradient(limits=c(15, 25), low="blue", high="red") + guides(colour=F) 
+rel_resist
+```
+
+```{r, eval = T, echo = F}
+postscript(file=here("extended_data", "Extended_data_figure_2.eps"), pagecentre = F, width=183, height=11, pointsize=8, horizontal=F)
+cowplot::plot_grid(abs_resist, minimal_gtable(summary3a), rel_resist,  minimal_gtable(summary3b), ncol=1, nrow=4, labels = "auto", rel_heights = c(1,0.8,1, 0.8))
+whatever <- dev.off()
+```
+
+\pagebreak
+
+## Model 4: temporal stability
+
+We calculated the temporal stability for all communities as the inverse of the coefficient of variation (ICV) (i.e. $\frac{\sigma}{\mu}$). The ICV was log transformed to meet assumptions of normality of residuals. Again centered temperature and log richness were included as main effects, while we accounted for the variation across compositions by including a radnom effect for combination.
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lme(log(inverse_community_CV) ~ log(richness) + temperature.centered, 
+                          random = ~ 1 | combination, ...) 
+```
+
+
+```{r}
+mod4a <- lme(log(inv_community_CV) ~ log_rich * temp_center,
+                random = ~ 1 | combination, 
+            data = temp_stab, 
+            na.action = na.omit)
+
+summary4a <- papeR::prettify(summary(mod4a), signif.stars=F, digits=3, smallest.pval = 0.000001)
+summary4a$` ` <- c("Intercept", "Richness", "Temperature", "Rich. x temp.")
+colnames(summary4a)[2] <- c("Estimate")
+summary4a
+```
+
+Whereas richness increased temporal stability, temperature had a negative effect. A significant interaction indicates that different richness levels responded differently to temperature in terms of temporal stability.
+
+#### AIC comparison of linear vs. nonlinear temperature effect:
+
+```{r, eval=T}
+mod4_nonlinear <- lme(log(inv_community_CV) ~ log_rich * as.factor(temp_center),
+                random = ~ 1 | combination, 
+            data = temp_stab, 
+            na.action = na.omit)
+AICtab(mod4a, mod4_nonlinear)
+
+```
+
+Again, temperature was best represented as a linear effect.
+
+#### Visualise model predictions  (one panel for each temperature)
+
+```{r, out.width = "90%", fig.width= 9, fig.height=3,  fig.align="center"}
+df_new <- expand.grid(temp_center=unique(temp_stab$temp_center), richness = 1:6)
+df_new$log_rich <- log(df_new$richness)
+df_new$log_inv_community_CV <- as.numeric(predict(mod4a, df_new, level=0))
+df_new$temperature <- rep(seq(15,25,by=2), 6)
+
+temp_stability <- ggplot() + geom_point(data=subset(temp_stab, temperature > 15),  aes(y=log(inv_community_CV), x = log_rich, colour=temperature)) + 
+  geom_line(data=subset(df_new, temperature > 15), aes(y=log_inv_community_CV, x = log_rich, colour=temperature)) + 
+  facet_grid(~temperature) +
+  xlab("Log richness") + 
+  ylab("Temporal stability \n log(ICV)") + 
+  scale_colour_gradient(limits=c(15, 25), low="blue", high="red") + guides(colour=F) 
+temp_stability
+```
+
+
+\pagebreak
+
+### Monocultures excluded
+
+Monocultures were slightly differently set up from the other communities (start at lower densities). We aligned the time series prior to the analysis to make sure that time series dynamics are comparable. To make sure that moncultures have nevertheless no influence on the observed patterns regarding temporal stability, we excluded monocultures and repeated the above analysis.
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lme(log(inverse_community_CV) ~ log(richness) + temperature.centered, 
+                          random = ~ 1 | combination, ...) 
+```
+
+
+```{r}
+mod4b <- lme(log(inv_community_CV) ~ log_rich * temp_center,
+                random = ~ 1 | combination, 
+            data = subset(temp_stab, richness > 1),
+            na.action = na.omit)
+
+summary4b <- papeR::prettify(summary(mod4b), signif.stars=F, digits=3, smallest.pval = 0.000001)
+summary4b$` ` <- c("Intercept", "Richness", "Temperature", "Rich. x temp.")
+colnames(summary4b)[2] <- c("Estimate")
+summary4b
+```
+
+Results are quantitatively and quite qualitatively robust to the exclusion of the monocultures, reinforcing that monocultures did not behave differently.
+
+```{r, eval = T, echo = F}
+postscript(file=here("extended_data", "Extended_data_figure_1.eps"), pagecentre = F, width=183, height=11, pointsize=8, horizontal=F)
+cowplot::plot_grid(temp_stability, minimal_gtable(summary4a), minimal_gtable(summary4b), ncol=1, nrow=3, labels = "auto", rel_heights = c(1,0.5,0.5))
+whatever <- dev.off()
+
+```
+
+\pagebreak
+
+# Covariation between resistance and temporal stability
+
+After establishing that richness increases temporal stability but decreases resistance, we formally tested the bivariate relationship of these two ecological stability measures with reduced major axis regression (as both stability measures are potentially influenced by some observation error).
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+RMA(absolute_resistance ~ inverse_community_CV, ...) 
+```
+
+## Reduced major axis analysis (RMA) across aggregated stability for each richness level:
+
+```{r}
+rma_fit2 <- stab_df %>%
+  filter(is.finite(inv_community_CV)) %>%  
+  group_by(richness) %>%
+  dplyr::summarize_at(vars(inv_community_CV, abs_resist), mean) %>% 
+  lmodel2(abs_resist ~ inv_community_CV, data=.,"interval", "interval", 99)
+rma_fit2$regression.results %>% filter(Method == "RMA") %>% select(-c(`Angle (degrees)`, Method))
+```
+
+Across richness levels, we see the negative covariation that we expected based on prior analyses.
+
+## Reduced major axis analysis (RMA) within richness levels:
+
+```{r}
+# merge temporal stability with resistance
+stab_df <- merge(temp_stab, bm_resist, by= c("temperature", "replicate", "combination", "richness", "frep")) 
+
+# fit reduced major axis regression within richness levels
+stab_df_rma <- stab_df %>% 
+  filter(is.finite(inv_community_CV)) %>%  
+  group_by(richness) %>%
+  nest() %>% 
+  mutate(fit = map(data, ~ lmodel2(abs_resist ~ inv_community_CV, data=.,"interval", "interval", 99)))
+
+stab_df_rma<- stab_df_rma %>% mutate(reg.table = map(fit, ~ .$regression.results))
+rma_fit <- unnest(stab_df_rma[, c(1, 4)]) %>% filter(Method == "RMA")
+rma_fit <- rma_fit %>% select(-c(`Angle (degrees)`, Method)) %>% arrange(richness)
+
+rma_fit$N <- stab_df %>% 
+  filter(is.finite(inv_community_CV)) %>%  
+  group_by(richness) %>% 
+  dplyr::summarize(N = n()) %>% 
+  select(N)
+
+```
+
+Within richness levels, we observe positive covariation between temporal stability and resistance, which likely is driven by differences in composition.
+
+```{r, eval = T, echo = F}
+postscript(file=here("extended_data", "Extended_data_table_2.eps"), pagecentre = F, width=183, height=11, pointsize=8, horizontal=F)
+cowplot::plot_grid(minimal_gtable_rma(rma_fit), ncol=1, nrow=1)
+whatever <- dev.off()
+```
+
+\pagebreak
+
+#### Visualise model predictions (figure 1d of main manuscript)
+
+```{r, out.width = "70%", fig.width= 7, fig.height=7, fig.align="center"}
+ggplot() + 
+geom_point(data=stab_df, 
+           aes(y=abs_resist, 
+               x=inv_community_CV, 
+               colour=as.factor(richness)), 
+                    alpha=.4, size=.8) + 
+          geom_point(data=stab_df %>%
+               group_by(richness) %>%
+               summarize_at(vars(inv_community_CV, abs_resist), mean, na.rm = T),
+             aes(x=inv_community_CV, y=abs_resist, colour=as.factor(richness)), size=5, shape="x") + 
+          stat_smooth(data=stab_df %>%
+                  filter(is.finite(inv_community_CV)) %>%
+                group_by(richness) %>%
+                summarize_at(vars(inv_community_CV, abs_resist), mean), 
+                aes(x=inv_community_CV, y=abs_resist, colour=as.factor(richness)),
+                method="lm", se=F, colour="black", linetype="solid") +
+         geom_abline(data = rma_fit, aes(intercept = Intercept, slope = Slope, colour=as.factor(richness)), linetype="dashed") +
+  viridis::scale_colour_viridis(discrete=T) + ylab("Resistance") + xlab("Temporal stability") +
+  theme(legend.position = "bottom") +guides(colour=F)
+```
+
+\pagebreak
+
+# Which mechanisms (asynchrony, statistical averaging, response diversity) drive the observed negative covariation?
+
+Niche complementarity and low response diversity likely caused negative covariance of stability components. Niche complementarity and the resulting increase in total biomass with richness tended to increase temporal stability (figure 1b in main text). 
+
+```{r}
+dd4 <- read.csv(here("data","species_biomass_BEEP_OES.csv"), stringsAsFactors = F)
+
+# delete contaminations and microcosms without measurements
+dd4 <- dd4 %>% filter(!(microcosmID %in% c(49,229,275,327,353,359,696,261,312,406)))
+
+dd4$day <- as.numeric(dd4$day)
+dd4$frep <- as.factor(dd4$replicate)
+dd4$temp_center <- as.numeric(scale(dd4$temperature, center=T, scale=F))
+dd4$log_rich <- log(dd4$richness)
+```
+
+## Asynchrony
+
+Asynchrony in species responses to temporal variation are often suggested as potential mechanism of higher temporal stability of community biomass. We used the asynchrony index suggested by Gross et al. (2014) to calculate whether there was an effect of richness, temperature and their interaction on asynchrony. The index ranges between -1 and 1, with -1 indicating perfect asyncrony and 1 being perfectly synchronous, and 0 indicating random variation.
+
+```{r, results = "asis"}
+async_Gross <- dd4 %>% filter(richness > 1) %>% 
+  group_by(combination, temperature, replicate, richness) %>%  
+  do(asynchrony_G = synchrony(., "day", "predicted_species", 
+                              "species_biomass", metric = "Gross", replicate.var = NA))
+
+async_Gross$log_rich <- log(async_Gross$richness)
+async_Gross$temp_center <- as.numeric(scale(async_Gross$temperature, center=T, scale=F))
+async_Gross$asynchrony <- as.numeric(unlist(async_Gross$asynchrony_G))
+```
+
+#### Model results:
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lme(asynchrony ~ log(richness) * temperature.centered, 
+                          random = ~ 1 | combination, ...) 
+```
+
+```{r}
+mod_async <- lme(asynchrony ~ temp_center * log_rich, random = ~ 1 | combination, data=as.data.frame(async_Gross))
+mod_async <- papeR::prettify(summary(mod_async), signif.stars=F, digits = 3, smallest.pval = 0.000001)
+mod_async$` ` <- c("Intercept", "Richness", "Temperature", "Rich. x temp.")
+colnames(mod_async)[2] <- c("Estimate")
+mod_async
+```
+
+We found little evidence for an effect of richness on population asynchrony, and hence an association between asynchrony and temporal stability. 
+
+#### Visualise model predictions  (one panel for each temperature)
+
+```{r, out.width = "90%", fig.width= 9, fig.height=3,  fig.align="center"}
+plt1 <- ggplot(data=async_Gross, aes(y=asynchrony, x=richness, colour=temperature)) + 
+  geom_jitter() + 
+  stat_smooth(method="lm", se=F) + 
+  facet_grid(.~ temperature) +
+  scale_colour_gradient(limits=c(15, 25), low="blue", high="red")  + 
+  guides(colour=F) + 
+  ylab("Synchrony") + 
+  xlab("Richness")
+plt1
+```
+
+\pagebreak
+
+## Statistical averaging
+
+The contribution of statistical averaging, i.e. the portfolio effect, to temporal stability can be assessed via regressions between the log of the variance of species biomass and the log of the mean of species biomass. A slope greater than 1 would indicate that statistical averaging contributed to temporal stability (Tilman et al. 1998).
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lm(log(species_variance_biomass) ~ log(species_mean_biomass) * temperature.centered, ...) 
+```
+
+
+```{r}
+temp_stab_pop <- dd4 %>% 
+  group_by(combination, temperature, replicate, richness, predicted_species) %>% 
+  dplyr::summarize(
+  species_mean_bm = mean(species_biomass, na.rm=T),
+  species_var_bm = var(species_biomass, na.rm = T),
+  inv_species_CV = mean(species_biomass, na.rm=T)/sd(species_biomass, na.rm = T)
+ )
+
+temp_stab_pop$log_rich <- log(temp_stab_pop$richness)
+temp_stab_pop$temp_center <- as.numeric(scale(temp_stab_pop$temperature, center=T, scale=F))
+```
+
+#### Model results:
+
+```{r}
+mod_stat_averaging <- lm(log(species_var_bm) ~ log(species_mean_bm) * temp_center, data= temp_stab_pop)
+mod_stat_averaging <- papeR::prettify(summary(mod_stat_averaging), signif.stars=F, digits=3, smallest.pval = 0.000001)
+mod_stat_averaging$` ` <- c("Intercept", "Log species mean biomass", "Temperature", "Log species mean biomass x temperature")
+colnames(mod_stat_averaging)[2] <- c("Estimate")
+mod_stat_averaging
+```
+
+Our results show a slope of 1.44 which suggests that statistical averaging contributed to temporal stabilization. 
+
+#### Visualise model predictions  (one panel for each temperature)
+
+```{r, out.width = "90%", fig.width= 9, fig.height=3,  fig.align="center"}
+plt2 <- ggplot(temp_stab_pop, aes(x=log(species_mean_bm), y=log(species_var_bm), group=temperature)) + 
+  geom_point() +
+  stat_smooth(method="lm")  + 
+  facet_grid(. ~ temperature) + 
+  ylab("Log of variance\nin species biomass") + 
+  xlab("Log of mean of species biomass")
+plt2
+```
+
+\pagebreak
+
+## Response diversity
+
+Finally, a lack of response diversity is a possible explanation for the negative relationship between richness and resistance. We assessed response diversity by regressing the mean species biomass against temperature for each of the species across each of the richness levels. Predominantly negative slopes would indicate low response diversity.
+
+Model syntax (using verbatim variable names and omitting control parameters for clarity): 
+
+```{r, echo = T, eval = F}
+lm(mean_species_biomass ~  temperature.centered, ...) 
+```
+
+```{r}
+spec_bm <- dd4 %>% group_by(predicted_species, combination, temperature, richness, log_rich, temp_center) %>% 
+  dplyr::summarize(mean_species_biomass = mean(species_biomass, na.rm=T))
+
+dd5 <- spec_bm %>% group_by(predicted_species, richness) %>% nest()
+dd5 <- dd5 %>% mutate(response_lm = map(data, ~ lm(mean_species_biomass ~ temp_center, data=.)))
+dd5 <- dd5 %>% mutate(response_slope = as.numeric(map(response_lm, ~ coef(.)[[2]])))
+```
+
+The following plot shows the slope of these biomass-temperature regressions for each species and richness: 
+
+```{r, out.width = "90%", fig.width= 10, fig.height=7, fig.align="center"}
+plt3 <- ggplot(data=dd5, aes(x=response_slope)) + 
+  geom_dotplot(aes(fill=predicted_species, colour=predicted_species, alpha=.3), binwidth = .001, dotsize=.5) + 
+  geom_vline(xintercept=0, linetype = "dashed", colour = "black") +
+  scale_x_continuous(limits=c(-0.01, 0.01)) +
+  scale_y_continuous(NULL, breaks = NULL) +
+  facet_grid(richness ~ .) +
+  theme(legend.position = "top", legend.justification = c(0.5)) + 
+  guides(alpha=F, fill=guide_legend(title="Species", ncol = 6), colour=guide_legend(title="Species")) + 
+  xlab("Slope of biomass-temperature relationship") 
+plt3
+```
+
+Low response diversity was inferred because the biomass of most species decreased with temperature. There is a hint that response diversity decreases with richness, in particular because *Spirostomum* switches from positive response to negative response as richness increases from 3 to 4 species.
+
+In summary, when there were more species, there was greater total biomass, greater temporal stability, but greater biomass lost with temperature increase. Thus, niche complementarity (i.e. effect diversity) likely caused a positive effect of diversity on temporal stability but in the absence of high response diversity, had a negative effect of diversity on resistance. However, this explanation cannot apply within richness levels, where there was positive covariance among stability components.
+
+```{r, eval = T, echo = F}
+grid_plts <- cowplot::plot_grid(plt1, plt2, plt3, ncol=1, nrow=3, labels=c("a", "c", "e"))
+ggsave(plot=grid_plts, here("extended_data", "EXD_mechanisms_figures.pdf"), width=10, height=12)
+
+grid_tbls <- cowplot::plot_grid(minimal_gtable(mod_async), minimal_gtable(mod_stat_averaging), ncol=1, nrow=3, labels=c("b", "d"), rel_heights=c(.5,.5))
+ggsave(plot=grid_tbls, here("extended_data", "EXD_mechanisms_tables.pdf"), width=10, height=12)
+
+# run from command line:
+#"cd /Users/Frank/Dropbox/Manuscripts\ in\ prep/Pennekamp\ BEEP\ OES\ and\ VOES/nature\ submission/submission/Reproducible_analysis_BEEP_OES/extended_data/"
+# "convert -density 500 EXD_mechanisms_figures.pdf EXD_mechanisms_tables.pdf +append extended_data_figure_3.pdf"
+```
+
+\newpage
+
+# References
+
+Gross, K. et al. 2014. Species richness and the temporal stability of biomass production: a new analysis of recent biodiversity experiments. - The American Naturalist 183: 1–12.    
+Tilman, D. et al. 1998. Diversity-stability relationships: statistical inevitability or ecological consequence? - The American Naturalist 151: 277–282.
+
+
+
+

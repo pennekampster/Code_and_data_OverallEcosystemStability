@@ -1,0 +1,322 @@
+---
+title: "Reproducible report II for 'Biodiversity increases and decreases ecosystem stability'"
+subtitle: 'Analysis of covariation in diversity-stability relationships'
+author: "Frank Pennekamp"
+date: "July 5, 2018"
+output:
+  pdf_document: default
+  df_print: kable
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F,
+                      warning = F,
+                      message = F)
+```
+
+```{r}
+suppressPackageStartupMessages(library("dplyr"))
+library(tidyr)
+library(ggplot2)
+library(ggrepel)
+library(here)
+library(kableExtra)
+library(readxl)
+
+library(gtable)
+library(gridExtra)
+library(grid)
+
+source(here("code", "helper_functions.R"))
+```
+
+# Review of relevant literature
+
+Based on the review by Donohue et al. (2016) we obtained a set of studies of resilience, resistance, and temporal variability of ecosystem functions in response to direct or indirect experimental manipulations of diversity. Direct manipulations were defined as changing diversity by adding different sets of species to an experimental plot, jar, or other unit, whereas indirect manipulations induced variation in diversity via the experimental treatment, such as fertilization. We only included studies that performed experimental manipulations. To analyse whether specific mechanisms lead to covariation, we noted the type of mechanism proposed for each of the individual diversity-stability components. Furthermore, we assessed whether a quantitative or verbal argument was provided (or the mechanisms were not addressed at all). 
+
+```{r, eval = T}
+mech_cov_df <-read_excel(here("data", "Synthesis of mechanisms of covariation.xlsx"))
+```
+
+```{r, eval = T, echo = F}
+# save overview table to extended data
+table_S1 <- readxl::read_xlsx(here("data", "Overview_table.xlsx"))
+Description <- strwrap(table_S1$Description, width = 50, simplify = FALSE) # modify 30 to your needs
+ref <- strwrap(table_S1$`Abbreviated reference`, width = 30, simplify = FALSE) # modify 30 to your needs
+table_S1$Description <- sapply(Description, paste, collapse = "\n")
+table_S1$`Abbreviated reference` <- sapply(ref, paste, collapse = "\n")
+
+postscript(file=here("extended_data", "Extended_data_table_3.ps"), pagecentre = T, horizontal = F)
+cowplot::plot_grid(minimal_gtable2(table_S1), ncol=1, nrow=1)
+whatever <- dev.off()
+```
+
+```{r}
+# Transpose and process overview table for analysis of mechanisms
+mech_cov_df$scale <- ifelse(is.na(mech_cov_df$scale), "",  mech_cov_df$scale)
+mech_cov_df$scale <- ifelse(mech_cov_df$scale == "",  mech_cov_df$scale, paste0("_", mech_cov_df$scale))
+mech_cov_df <- mech_cov_df %>% mutate(`diversity-stability relationship` = paste0(`diversity-stability relationship`, scale))
+
+mechanism_table <- mech_cov_df %>% select(Code, `diversity-stability relationship`, scale, direction, `Mechanism terms`, `type of evidence`) 
+
+tab1 <- mechanism_table %>% select(Code, `diversity-stability relationship`, direction) %>% spread(`diversity-stability relationship`, direction)
+tab1$abs_resistance_resilience <- paste0("(", tab1$resistance_absolute, "/", tab1$resilience, ")")
+tab1$rel_resistance_resilience <- paste0("(", tab1$resistance_relative, "/", tab1$resilience, ")")
+tab1$abs_resistance_temporal_var <- paste0("(", tab1$resistance_absolute, "/", tab1$`temporal variability`, ")")
+tab1$rel_resistance_temporal_var <- paste0("(", tab1$resistance_relative, "/", tab1$`temporal variability`, ")")
+tab1$resilience_temporal_var <- paste0("(", tab1$resilience, "/", tab1$`temporal variability`, ")")
+tab1 <- tab1[,c(1,6:10)] %>% group_by(Code) %>% gather("diversity_stability_relation", value, 2:6)
+tab1 <- tab1 %>% mutate(NA_count = stringr::str_count(value, pattern = "NA"))
+tab1 <- tab1 %>% filter(NA_count == 0) %>% select(-NA_count)
+
+tab2 <- mechanism_table %>% select(Code, `diversity-stability relationship`, `Mechanism terms`) %>% spread(`diversity-stability relationship`, `Mechanism terms`)
+tab2$abs_resistance_resilience <- paste0("(", tab2$resistance_absolute, "/", tab2$resilience, ")")
+tab2$rel_resistance_resilience <- paste0("(", tab2$resistance_relative, "/", tab2$resilience, ")")
+tab2$abs_resistance_temporal_var <- paste0("(", tab2$resistance_absolute, "/", tab2$`temporal variability`, ")")
+tab2$rel_resistance_temporal_var <- paste0("(", tab2$resistance_relative, "/", tab2$`temporal variability`, ")")
+tab2$resilience_temporal_var <- paste0("(", tab2$resilience, "/", tab2$`temporal variability`, ")")
+tab2 <- tab2[,c(1,6:10)] %>% group_by(Code) %>% gather("diversity_stability_relation", value, 2:6)
+tab2 <- tab2 %>% mutate(NA_count = stringr::str_count(value, pattern = "NA"))
+tab2 <- tab2 %>% filter(NA_count == 0) %>% select(-NA_count)
+
+tab3 <- mechanism_table %>% select(Code, `diversity-stability relationship`, `type of evidence`) %>% spread(`diversity-stability relationship`, `type of evidence`)
+tab3$abs_resistance_resilience <- paste0("(", tab3$resistance_absolute, "/", tab3$resilience, ")")
+tab3$rel_resistance_resilience <- paste0("(", tab3$resistance_relative, "/", tab3$resilience, ")")
+tab3$abs_resistance_temporal_var <- paste0("(", tab3$resistance_absolute, "/", tab3$`temporal variability`, ")")
+tab3$rel_resistance_temporal_var <- paste0("(", tab3$resistance_relative, "/", tab3$`temporal variability`, ")")
+tab3$resilience_temporal_var <- paste0("(", tab3$resilience, "/", tab3$`temporal variability`, ")")
+tab3 <- tab3[,c(1,6:10)] %>% group_by(Code) %>% gather("diversity_stability_relation", value, 2:6)
+tab3 <- tab3 %>% mutate(NA_count = stringr::str_count(value, pattern = "NA"))
+tab3 <- tab3 %>% filter(NA_count == 0) %>% select(-NA_count)
+
+# put all information into one table
+full_table <- cbind(tab1 %>% rename(direction = value) %>% select(Code, diversity_stability_relation, direction), 
+                    tab2 %>% rename(mechanism = value) %>% select(mechanism), 
+                    tab3 %>% rename(evidence = value) %>% select(evidence)) %>% select(-Code1, -Code2)
+
+# some tidying of variable names
+full_table_clean <- full_table %>% mutate(mechanism = gsub("\\(", "", mechanism)) %>%
+  mutate(mechanism = gsub("\\)", "", mechanism)) %>% 
+  mutate(direction = gsub("\\(", "", direction)) %>%
+  mutate(direction = gsub("\\)", "", direction)) %>% 
+  mutate(evidence = gsub("\\(", "", evidence)) %>%
+  mutate(evidence = gsub("\\)", "", evidence)) %>%
+  mutate(diversity_stability_relation = gsub("ce_res", "ce/res", diversity_stability_relation)) %>%
+  mutate(diversity_stability_relation = gsub("ce_tem", "ce/tem", diversity_stability_relation)) %>%
+  separate(diversity_stability_relation, into = c("stability component 1", "stability component 2"), sep = "/", remove = F) %>%
+  separate(mechanism, into = c("mechanism1", "mechanism2"), sep = "/", remove = T) %>%
+  separate(direction, into = c("direction1", "direction2"), sep = "/", remove = F) %>%
+  separate(evidence, into = c("evidence1", "evidence2"), sep = "/", remove = T)
+
+full_table_clean$direction1 <- 
+  case_when(
+    full_table_clean$direction1 == "negative" ~ - .85,
+    full_table_clean$direction1 == "positive" ~ .85,
+    full_table_clean$direction1 == "neutral" ~ 0
+  )
+
+full_table_clean$direction2 <- 
+  case_when(
+    full_table_clean$direction2 == "negative" ~ - .85,
+    full_table_clean$direction2 == "positive" ~ .85,
+    full_table_clean$direction2 == "neutral" ~ 0
+  )
+
+# sort according to code
+full_table_clean <- full_table_clean %>% arrange(Code)
+```
+
+# Visual summary of diversity-stability relationships
+
+```{r, eval = T, fig.height=5, fig.width=15}
+full_table_clean$diversity_stability_relation <- gsub("abs_", "", full_table_clean$diversity_stability_relation)
+full_table_clean$diversity_stability_relation <- gsub("rel_", "", full_table_clean$diversity_stability_relation)
+full_table_clean$scale <- ifelse(grepl("rel_", full_table_clean$`stability component 1`), "relative", full_table_clean$`stability component 1`)
+full_table_clean$scale <- ifelse(grepl("abs_", full_table_clean$scale), "absolute", full_table_clean$scale)
+full_table_clean$scale <- ifelse(grepl("resilience", full_table_clean$scale), "", full_table_clean$scale)
+
+p1 <- diversity_stability_plot(dsr="resistance/resilience", xlab="Diversity - resistance", ylab="Diversity - resilience")  + theme(legend.position = "none") 
+p2 <- diversity_stability_plot2(dsr="resistance/temporal_var", xlab="Diversity - resistance", ylab="Diversity - temporal variability")  + theme(legend.position = "none")
+p3 <- diversity_stability_plot3(dsr="resilience/temporal_var", xlab="Diversity - resilience", ylab="Diversity - temporal variability") 
+
+cowplot::plot_grid(p1,p2, p3, ncol = 3)
+ggsave(here("figures", "figure_2.pdf"), width=15, height=10)
+```
+
+Positive, negative and neutral relationships among resistance, resilience and temporal variability in empirical studies with diversity manipulation. Detailed information about individual studies (e.g. code VR-09) is provided in extended data table 3 & 4. Beige regions indicate no covariation. Relative positions within regions are arbitrary and do not indicate relative strengths of relationships. Different colours indicate the effect of diversity on absolute (red) and relative resistance (blue). We restricted our analysis to the most commonly used stability components: temporal stability, resistance and resilience.
+
+# Table with all studies used in the analysis
+```{r}
+overview_table <- mech_cov_df %>% select(Code, Description, `Abbreviated reference`) %>% distinct(Code, .keep_all = T)
+overview_table %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 7)  %>%
+  column_spec(c(2),  width = "30em") %>% column_spec(c(3),  width = "10em") 
+```
+
+# Breakdown of results
+
+## How many individual diversity-stability relationships of each type?
+
+```{r}
+as.data.frame(table(mechanism_table$direction)) %>% 
+  rename(direction = Var1) %>%
+kable("latex", booktabs = T) %>%
+kable_styling(latex_options = "striped")
+```
+
+## How many reported relationships are accomanpanied by which type of evidence of mechanism?
+
+```{r}
+as.data.frame(table(mechanism_table$`type of evidence`)) %>% 
+  rename(`type of evidence`= Var1) %>%
+kable("latex", booktabs = T) %>%
+kable_styling(latex_options = "striped")
+```
+
+## How often do we find covariation?
+
+```{r}
+full_table_clean$direction1_label <- 
+  case_when(
+    full_table_clean$direction1 == -.85 ~ "negative",
+    full_table_clean$direction1 == .85 ~ "positive",
+    full_table_clean$direction1 == 0 ~ "neutral" 
+  )
+
+full_table_clean$direction2_label <- 
+  case_when(
+    full_table_clean$direction2 == -.85 ~ "negative",
+    full_table_clean$direction2 == .85 ~ "positive",
+    full_table_clean$direction2 == 0 ~ "neutral" 
+  )
+
+as.data.frame(table(full_table_clean$direction1_label, full_table_clean$direction2_label)) %>% 
+  rename(`stability comp 1`= Var1,
+         `stability comp 2`= Var2) %>%
+kable("latex", booktabs = T) %>%
+kable_styling(latex_options = "striped")
+```
+
+## How many studies have quantitative analysis of mechanisms?
+
+```{r}
+as.data.frame(table(full_table_clean$evidence1, full_table_clean$evidence2)) %>% 
+  rename(`type of evidence 1`= Var1,
+         `type of evidence 2`= Var2) %>%
+kable("latex", booktabs = T) %>%
+kable_styling(latex_options = "striped")
+```
+
+# Summary of reported mechanisms
+
+There were 29 bivariate diversity-stability relationships (not including our own, hence a total of 30 is referred to in the main text). Some studies occur multiple times, as they report both absolute and relative resistance values. Of the 29 pairs of stability components, about half were accompanied by quantitative analyses of diversity-stability relationships. Mechanisms included selection / composition effects, high / low response diversity, abundance evenness, insurance effect, synchrony / asynchrony, statistical averaging, and trade-offs in response diversity among stressors. 
+
+```{r}
+postscript(file=here("extended_data", "extended_data_table_4.ps"), pagecentre = T, horizontal = T)
+cowplot::plot_grid(minimal_gtable2(full_table_clean %>% 
+                                     select(-c(direction1, 
+                                               direction2, 
+                                               direction1_label, 
+                                               direction2_label, 
+                                               `stability component 1`, 
+                                               `stability component 2`))), ncol=1, nrow=1)
+whatever <- dev.off()
+```
+
+## List of studies with positive covariation
+
+```{r,}
+full_table_clean %>%
+  filter( (direction1_label == "positive" & direction2_label == "positive") |  (direction1_label == "negative" &  direction2_label == "negative") ) %>%
+    select(Code, diversity_stability_relation, direction, mechanism1, mechanism2, evidence1, evidence2) %>%
+  kable() %>%
+   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 7) %>%
+    column_spec(4:7,  width = "5em") 
+```
+
+```{r eval=FALSE}
+positives <- full_table_clean %>%
+  filter( (direction1_label == "positive" & direction2_label == "positive") |  (direction1_label == "negative" &  direction2_label == "negative") ) %>%
+  gather( "evidence", "value", evidence1, evidence2)
+
+xtabs(  ~ value, data=positives)
+```
+
+## List of studies with negative covariation
+
+```{r}
+full_table_clean %>%
+  filter( (direction1_label == "negative" & direction2_label == "positive") |  (direction2_label == "negative" &  direction1_label == "positive") ) %>%
+    select(Code, diversity_stability_relation, direction, mechanism1, mechanism2, evidence1, evidence2) %>%
+  kable() %>%
+   kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 7) %>%
+    column_spec(4:7,  width = "5em") 
+```
+
+```{r, eval=FALSE}
+negatives <- full_table_clean %>%
+  filter( (direction1_label == "negative" & direction2_label == "positive") |  (direction1_label == "positive" &  direction2_label == "negative") ) %>%
+  gather( "evidence", "value", evidence1, evidence2)
+
+xtabs(  ~ value, data=negatives)
+```
+
+## List of studies that did not find covariation:
+```{r}
+full_table_clean %>%
+  filter( direction1_label == "neutral" |  direction2_label == "neutral" )  %>%
+  select(Code, diversity_stability_relation, direction, mechanism1, mechanism2, evidence1, evidence2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 7) %>%
+  column_spec(4:7,  width = "5em") 
+```
+
+```{r eval=FALSE}
+neutrals <- full_table_clean %>%
+  filter( direction1_label == "neutral" |  direction2_label == "neutral" )  %>%
+  gather( "evidence", "value", evidence1, evidence2)
+
+xtabs(  ~ value, data=neutrals)
+```
+
+# Which pairs of diversity-stability relationships have a quantitative analysis of both relationships. 
+
+## Positive covariation
+```{r, results="asis"}
+full_table_clean %>%
+  filter( (direction1_label == "positive" & direction2_label == "positive") |  (direction1_label == "negative" &  direction2_label == "negative") ) %>%
+  filter( evidence1 == "signals of mechanisms" & evidence2 == "signals of mechanisms") %>%
+  select(Code, diversity_stability_relation, direction, mechanism1, mechanism2, evidence1, evidence2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 7) %>%
+  column_spec(4:7,  width = "5em") 
+```
+
+## Negative covariation
+```{r}
+full_table_clean %>%
+  filter( (direction1_label == "negative" & direction2_label == "positive") |  (direction1_label == "positive" &  direction2_label == "negative") ) %>%
+  filter( evidence1 == "signals of mechanisms" & evidence2 == "signals of mechanisms") %>%
+  select(Code, diversity_stability_relation, direction, mechanism1, mechanism2, evidence1, evidence2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 7) %>%
+  column_spec(4:7,  width = "5em") 
+```
+
+## No covariation
+```{r}
+full_table_clean %>%
+  filter( direction1_label == "neutral" |  direction2_label == "neutral" )  %>%
+  filter( evidence1 == "signals of mechanisms" & evidence2 == "signals of mechanisms") %>%
+  select(Code, diversity_stability_relation, direction, mechanism1, mechanism2, evidence1, evidence2) %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), font_size = 7) %>%
+  column_spec(4:7,  width = "5em") 
+```
+
+# References
+
+Donohue, I. et al. 2016. Navigating the complexity of ecological stability. - Ecology letters 19: 1172–1185.
