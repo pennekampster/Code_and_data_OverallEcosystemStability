@@ -14,8 +14,6 @@ overall ecosystem stability. The reports are also available as pdfs in the `repo
 
 Please also note our [interactive shiny app](https://frankpennekamp.shinyapps.io/Overall_ecosystem_stability_demo/) to illustrate the overall ecosystem stability concept. 
 
-## Licences
-
 ## License
 
 The data is licensed under the [CC0-1.0 license](https://choosealicense.com/licenses/cc0-1.0/), 
