@@ -270,7 +270,7 @@ diversity_stability_plot2 <- function(dsr=NULL, xlab, ylab){
     annotate("text", x = -1., y = -1.25, label = "(-/-)", size = 2) +
     annotate("text", y = 0, x = -1.25, label = "0", size = 2) +
     annotate("text", y = 0, x = 1.25, label = "0", size = 2)  +
-    annotate("text", x = 1, y = -1, label = "this study", colour="darkblue", size = 2)+
+    annotate("text", x = 1, y = -1, label = "this study", colour="darkred", size = 2)+
     guides(colour = guide_legend(title = "Resistance")) +
     scale_color_manual(breaks = c("relative", "absolute"),
                        values=c("darkred", "darkblue"))
