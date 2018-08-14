@@ -13,3 +13,10 @@ the statistical analyses, the qualitative literature review as well as the calcu
 overall ecosystem stability. The reports are also available as pdfs in the `reports`folder.
 
 Please also note our [interactive shiny app](https://frankpennekamp.shinyapps.io/Overall_ecosystem_stability_demo/) to illustrate the overall ecosystem stability concept. 
+
+## Licences
+
+## License
+
+The data is licensed under the [CC0-1.0 license](https://choosealicense.com/licenses/cc0-1.0/), 
+and the analysis code under the [CC-BY-4.0](https://opensource.org/licenses/mit-license.php).
