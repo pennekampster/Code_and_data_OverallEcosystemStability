@@ -5,6 +5,8 @@ This repository contains code and data needed to reproduce the article:
 **Frank Pennekamp, Mikael Pontarp, Andrea Tabi, Florian Altermatt, Roman Alther, Yves Choffat, Emanuel A. Fronhofer, Pravin Ganesanandamoorthy, Aurélie Garnier, Jason I. Griffiths, Suzanne Greene, Katherine Horgan, Thomas M. Massie, Elvira Mächler, Gian-Marco Palamara, Mathew Seymour, Owen L. Petchey**      
 Biodiversity increases and decreases ecosystem stability.
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1345557.svg)](https://doi.org/10.5281/zenodo.1345557)
+
 ## Instructions
 
 All analyses were done in `R`. All data needed to reproduce the analyses is available in the `data`folder. 
